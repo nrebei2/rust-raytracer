@@ -3,6 +3,8 @@ use std::{
     ops::{Index, IndexMut},
 };
 
+use crate::utility::*;
+
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct Vec3(f64, f64, f64);
 
@@ -17,6 +19,27 @@ impl Vec3 {
         f64: From<V>,
     {
         Self(e0.into(), e1.into(), e2.into())
+    }
+
+    pub fn random() -> Self {
+        Self(random_float(), random_float(), random_float())
+    }
+    pub fn random_rng(min: f64, max: f64) -> Self {
+        Self(random_float_rng(min, max), random_float_rng(min, max), random_float_rng(min, max))
+    }
+    pub fn random_in_unit_sphere() -> Self {
+        loop {
+            let gen = Self::random_rng(-1., 1.);
+            if gen.length_squared() >= 1. {continue};
+            return gen
+        }
+    }
+    pub fn random_unit_vector() -> Self {
+        Self::random_in_unit_sphere().unit_vec()
+    }
+    pub fn random_in_hemisphere(&self) -> Self {
+        let gen = Self::random_unit_vector();
+        if Self::dot(&gen, self) > 0. {gen} else {-gen}
     }
 
     pub fn x(&self) -> f64 {
