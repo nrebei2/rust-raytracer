@@ -29,7 +29,7 @@ impl HittableList {
 impl Hittable for HittableList {
     fn hit(
         &self,
-        r: &crate::ray::Ray,
+        r: &crate::Ray,
         t_min: f64,
         t_max: f64,
         rec: &mut hittable::HitRecord,

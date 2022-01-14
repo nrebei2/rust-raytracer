@@ -1,13 +1,17 @@
 use super::{Point3, Vec3};
 
-pub struct Ray<'a> {
-    origin: &'a Point3,
+pub struct Ray {
+    origin: Point3,
     direction: Vec3,
 }
 
-impl<'a> Ray<'a> {
-    pub fn new(origin: &'a Point3, direction: Vec3) -> Self {
+impl Ray {
+    pub fn new(origin: Point3, direction: Vec3) -> Self {
         Self { origin, direction }
+    }
+
+    pub fn create() -> Self {
+        Self { origin: Point3::create(), direction: Vec3::create() }
     }
 
     pub fn origin(&self) -> &Point3 {

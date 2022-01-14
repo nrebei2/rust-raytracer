@@ -1,24 +1,19 @@
 mod camera;
-mod color;
 mod hittable;
-mod hittable_list;
-mod ray;
-mod sphere;
 mod vec3;
 mod utility;
+mod material;
 
 #[macro_use]
 extern crate impl_ops;
 
 use camera::Camera;
-use hittable::{HitRecord, Hittable};
-use hittable_list::HittableList;
-use ray::Ray;
-use sphere::Sphere;
+use hittable::{HitRecord, Hittable, sphere::Sphere, hittable_list::HittableList};
 use std::rc::Rc;
 use std::time::Instant;
-use vec3::{Color, Point3, Vec3};
+use vec3::{Color, Point3, Vec3, color, ray::*};
 use utility::*;
+use material::*;
 
 fn ray_color(ray: Ray, world: &HittableList, depth : i32) -> Color {
     let mut rec = HitRecord::new();
@@ -26,7 +21,14 @@ fn ray_color(ray: Ray, world: &HittableList, depth : i32) -> Color {
     if depth <= 0 {return Color::new(0, 0, 0)}
 
     if world.hit(&ray, 0.001, f64::INFINITY, &mut rec) {
-        return 0.5 * ray_color(Ray::new(&rec.p, rec.normal.random_in_hemisphere()), world, depth - 1);
+        if !rec.front_face {eprintln!("Inside sphere!")};
+        let mut scattered = Ray::create();
+        let mut attenuation = Color::create();
+
+        if rec.mat_ptr.scatter(&ray, &rec, &mut attenuation, &mut scattered) {     
+            return attenuation * ray_color(scattered, world, depth - 1)
+        }
+        return Color::new(0, 0, 0)
     }
 
     let unit_direction = ray.direction().unit_vec();
@@ -39,14 +41,23 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: i32 = 400;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
-    const SAMPLES_PER_PIXEL: i32 = 100;
-    const MAX_DEPTH : i32 = 50;
+    const SAMPLES_PER_PIXEL: i32 = 10;
+    const MAX_DEPTH : i32 = 20;
 
     // World
-
+        
     let mut world = HittableList::new();
-    world.add(Rc::new(Sphere::new(Point3::new(0, 0, -1), 0.5)));
-    world.add(Rc::new(Sphere::new(Point3::new(0, -100.5, -1), 100.)));
+
+    let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.)));
+    let material_center = Rc::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
+    let material_left = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
+
+
+    world.add(Rc::new(Sphere::new(Point3::new(0, -100.5, -1), 100., material_ground)));
+    world.add(Rc::new(Sphere::new(Point3::new(0, 0, -1), 0.5, material_center)));
+    world.add(Rc::new(Sphere::new(Point3::new(-1, 0, -1), 0.5, material_left)));
+    world.add(Rc::new(Sphere::new(Point3::new(1, 0, -1), 0.5, material_right)));
 
     // Camera
 
@@ -75,4 +86,5 @@ fn main() {
     }
     let elapsed = now.elapsed();
     eprintln!("Render elapsed: {:.2?}", elapsed);
+
 }

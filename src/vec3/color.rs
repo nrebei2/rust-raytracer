@@ -1,4 +1,4 @@
-use super::Color;
+use crate::Color;
 
 pub fn write_color(pixel_color: Color, sample_per_pixels: i32) {
     let mut r = pixel_color.x();

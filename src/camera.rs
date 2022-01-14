@@ -39,6 +39,6 @@ impl Camera {
     pub fn get_ray(&self, u: f64, v: f64) -> Ray {
         let to_screen =
             &self.lower_left_corner + u * &self.horizontal + v * &self.vertical - &self.origin;
-        Ray::new(&self.origin, to_screen)
+        Ray::new(self.origin.clone(), to_screen)
     }
 }
