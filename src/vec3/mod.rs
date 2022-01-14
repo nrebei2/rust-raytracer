@@ -44,6 +44,13 @@ impl Vec3 {
       let gen = Self::random_unit_vector();
       if Self::dot(&gen, self) > 0. {gen} else {-gen}
   }
+  pub fn random_in_unit_disk() -> Self {
+      loop {
+        let gen = Self::new(random_float_rng(-1., 1.), random_float_rng(-1., 1.), 0);
+        if gen.length_squared() >= 1. {continue};
+        return gen
+      }
+  }
 
   pub fn x(&self) -> f64 {
       self.0
