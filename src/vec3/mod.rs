@@ -1,6 +1,6 @@
 use std::{
   fmt::Display,
-  ops::{Index, IndexMut},
+  ops::{Index, IndexMut}, iter::Sum,
 };
 
 use crate::utility::*;
@@ -131,6 +131,7 @@ impl Display for Vec3 {
       write!(f, "{} {} {}", self[0], self[1], self[2])
   }
 }
+
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;

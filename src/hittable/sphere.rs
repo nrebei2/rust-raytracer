@@ -13,7 +13,7 @@ impl<M : Material> Sphere<M> {
     }
 }
 
-impl<M : Material> hittable::Hittable for Sphere<M> {
+impl<M : Material> Hittable for Sphere<M> {
     fn hit(
         &self,
         r: &crate::Ray,

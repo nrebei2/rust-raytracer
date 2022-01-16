@@ -14,6 +14,7 @@ use std::time::Instant;
 use vec3::{Color, Point3, Vec3, color, ray::*};
 use utility::*;
 use material::*;
+use rayon::prelude::*;
 
 fn random_scene() -> HittableList {
     let mut world = HittableList::new();
@@ -83,7 +84,7 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: i32 = 1200;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
-    const SAMPLES_PER_PIXEL: i32 = 500;
+    const SAMPLES_PER_PIXEL: i32 = 10;
     const MAX_DEPTH : i32 = 50;
 
     // World
@@ -102,24 +103,48 @@ fn main() {
 
     println!("P3\n{} {}\n255", IMAGE_WIDTH, IMAGE_HEIGHT);
     let now = Instant::now();
-    for j in (0..IMAGE_HEIGHT).rev() {
-        eprint!("\r{} lines remaining!", j);
-        std::io::stderr().flush().unwrap();
-        for i in 0..IMAGE_WIDTH {
-            let mut pixel_color = Color::new(0, 0, 0);
+    
+    // Sequential
+    // for j in (0..IMAGE_HEIGHT).rev() {
+    //     eprint!("\r{} lines remaining!", j);
+    //     std::io::stderr().flush().unwrap();
+    //     for i in 0..IMAGE_WIDTH {
+    //         let mut pixel_color = Color::new(0, 0, 0);
 
-            for _ in 0..SAMPLES_PER_PIXEL {
-                let u = (i as f64 + random_float()) as f64
+    //         for _ in 0..SAMPLES_PER_PIXEL {
+    //             let u = (i as f64 + random_float()) as f64
+    //                 / (IMAGE_WIDTH - 1) as f64;
+    //             let v = (j as f64 + random_float()) as f64
+    //                 / (IMAGE_HEIGHT - 1) as f64;
+    //             let r = cam.get_ray(u, v);
+    //             pixel_color += ray_color(r, &world, MAX_DEPTH);
+    //         }
+
+    //         color::write_color(pixel_color, SAMPLES_PER_PIXEL)
+    //     }
+    // }
+
+    // Parallel
+    let image = (0..IMAGE_HEIGHT).into_par_iter().rev().flat_map(|y| {
+        (0..IMAGE_WIDTH).flat_map(|x| {
+
+            let pixel_color = (0..SAMPLES_PER_PIXEL).map(|_|{
+                let u = (x as f64 + random_float()) as f64
                     / (IMAGE_WIDTH - 1) as f64;
-                let v = (j as f64 + random_float()) as f64
+                let v = (y as f64 + random_float()) as f64
                     / (IMAGE_HEIGHT - 1) as f64;
                 let r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, &world, MAX_DEPTH);
-            }
+                ray_color(r, &world, MAX_DEPTH)
+            }).fold(Color::new(0, 0, 0), |acc, x| acc + x);
 
-            color::write_color(pixel_color, SAMPLES_PER_PIXEL)
-        }
+            color::get_color(pixel_color, SAMPLES_PER_PIXEL)
+        }).collect::<Vec<u8>>()
+    }).collect::<Vec<u8>>();
+
+    for col in image.chunks(3) {
+        println!("{} {} {}", col[0], col[1], col[2]);
     }
+
     let elapsed = now.elapsed();
     eprintln!("\nRender elapsed: {:.2?}", elapsed);
 

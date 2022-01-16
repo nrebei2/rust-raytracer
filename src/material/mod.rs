@@ -1,6 +1,6 @@
 use crate::{Ray, HitRecord, Color, Vec3, utility::random_float};
 
-pub trait Material {
+pub trait Material: Sync {
   fn scatter(&self, r_in : &Ray, rec : &HitRecord) -> Option<(Color, Ray)>;
 }
 
