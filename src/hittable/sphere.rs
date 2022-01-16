@@ -1,26 +1,25 @@
-use crate::{hittable, Point3, Vec3, material::Material};
+use crate::{hittable::{Hittable, HitRecord, self}, Point3, Vec3, material::Material};
 use std::rc::Rc;
 
-pub struct Sphere {
+pub struct Sphere<M : Material> {
     center: Point3,
     radius: f64,
-    mat_ptr: Rc<dyn Material>,
+    mat_ptr: M,
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f64, mat_ptr: Rc<dyn Material>) -> Self {
+impl<M : Material> Sphere<M> {
+    pub fn new(center: Point3, radius: f64, mat_ptr: M) -> Self {
         Self { center, radius, mat_ptr }
     }
 }
 
-impl hittable::Hittable for Sphere {
+impl<M : Material> hittable::Hittable for Sphere<M> {
     fn hit(
         &self,
         r: &crate::Ray,
         t_min: f64,
-        t_max: f64,
-        rec: &mut hittable::HitRecord,
-    ) -> bool {
+        t_max: f64
+    ) -> Option<HitRecord> {
         let oc = r.origin() - &self.center;
         let a = r.direction().length_squared();
         let half_b = Vec3::dot(&oc, r.direction());
@@ -28,7 +27,7 @@ impl hittable::Hittable for Sphere {
         let discriminant = half_b * half_b - a * c;
 
         if discriminant < 0. {
-            return false;
+            return None;
         };
 
         let sqrtd = discriminant.sqrt();
@@ -36,17 +35,17 @@ impl hittable::Hittable for Sphere {
         if root < t_min || t_max < root {
             root = (-half_b + sqrtd) / a;
             if root < t_min || t_max < root {
-                return false;
+                return None;
             }
         }
 
-        rec.t = root;
-        rec.p = r.at(rec.t);
+        let t = root;
+        let p = r.at(t);
 
-        let outward_normal = (&rec.p - &self.center) / self.radius;
-        rec.set_face_normal(r, outward_normal);
-        rec.mat_ptr = self.mat_ptr.clone();
+        let outward_normal = (&p - &self.center) / self.radius;
+        let (front_face, normal) = HitRecord::get_face_normal(r, outward_normal);
+        let mat_ptr = &self.mat_ptr;
 
-        true
+        Some (HitRecord {t, p, normal, front_face, mat_ptr })
     }
 }

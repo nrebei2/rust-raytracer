@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::hittable::{self, HitRecord, Hittable};
 
-type Object = Rc<dyn hittable::Hittable>;
+type Object = Box<dyn hittable::Hittable>;
 
 pub struct HittableList {
     objects: Vec<Object>,
@@ -18,8 +18,8 @@ impl HittableList {
         }
     }
 
-    pub fn add(&mut self, object: Object) {
-        self.objects.push(object)
+    pub fn add<M : Hittable + 'static>(&mut self, object: M) {
+        self.objects.push(Box::new(object))
     }
     pub fn clear(&mut self) {
         self.objects.clear()
@@ -31,22 +31,19 @@ impl Hittable for HittableList {
         &self,
         r: &crate::Ray,
         t_min: f64,
-        t_max: f64,
-        rec: &mut hittable::HitRecord,
-    ) -> bool {
+        t_max: f64
+    ) -> Option<HitRecord> {
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
 
-        for object in &self.objects {
-            // LOOK INTO
-            let mut temp_rec = HitRecord::new();
-            if object.hit(r, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                *rec = temp_rec;
+        let mut rec: Option<HitRecord>  = None;
+
+        for object in &self.objects {            
+            if let Some(hit_rec) = object.hit(r, t_min, closest_so_far) {
+                closest_so_far = hit_rec.t;
+                rec = Some (hit_rec);
             }
         }
-
-        hit_anything
+        rec
     }
 }

@@ -1,7 +1,7 @@
 use crate::{Ray, HitRecord, Color, Vec3, utility::random_float};
 
 pub trait Material {
-  fn scatter(&self, r_in : &Ray, rec : &HitRecord, attenuation : &mut Color, scattered: &mut Ray) -> bool;
+  fn scatter(&self, r_in : &Ray, rec : &HitRecord) -> Option<(Color, Ray)>;
 }
 
 pub struct Lambertian {
@@ -15,14 +15,12 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-  fn scatter(&self, _r_in : &Ray, rec : &HitRecord, attenuation : &mut Color, scattered: &mut Ray) -> bool {
+  fn scatter(&self, _r_in : &Ray, rec : &HitRecord) -> Option<(Color, Ray)> {
       let mut scatter_direction = &rec.normal + Vec3::random_unit_vector();
       
-      if scatter_direction.near_zero() { scatter_direction = rec.normal.clone() }
+      if scatter_direction.near_zero() { scatter_direction = rec.normal }
       
-      *scattered = Ray::new(rec.p.clone(), scatter_direction);
-      *attenuation = self.albedo.clone();
-      true
+      Some ((self.albedo, Ray::new(rec.p, scatter_direction)))
   }
 }
 
@@ -38,13 +36,17 @@ impl Metal {
 }
 
 impl Material for Metal {
-  fn scatter(&self, r_in : &Ray, rec : &HitRecord, attenuation : &mut Color, scattered: &mut Ray) -> bool {
-      let reflected = Vec3::reflect(&r_in.direction().unit_vec(), &rec.normal);
-      
-      *scattered = Ray::new(rec.p.clone(), reflected + self.fuzz * Vec3::random_in_unit_sphere());
-      *attenuation = self.albedo.clone();
-      
-      return Vec3::dot(scattered.direction(), &rec.normal) > 0.
+  fn scatter(&self, r_in : &Ray, rec : &HitRecord) -> Option<(Color, Ray)> {
+      let mut reflected = Vec3::reflect(&r_in.direction().unit_vec(), &rec.normal);
+
+      if self.fuzz > 0.0 {reflected += self.fuzz * Vec3::random_in_unit_sphere()}
+
+      if Vec3::dot(&reflected, &rec.normal) > 0. {
+        Some ((self.albedo, Ray::new(rec.p, reflected)))
+      } else {
+        None
+      }
+
   }
 }
 
@@ -65,7 +67,7 @@ impl Dielectic {
 }
 
 impl Material for Dielectic {
-  fn scatter(&self, r_in : &Ray, rec : &HitRecord, attenuation : &mut Color, scattered: &mut Ray) -> bool {
+  fn scatter(&self, r_in : &Ray, rec : &HitRecord) -> Option<(Color, Ray)> {
       let refraction_ratio = if rec.front_face {1.0/self.ir} else {self.ir};
 
       let unit_direction = r_in.direction().unit_vec();
@@ -81,9 +83,7 @@ impl Material for Dielectic {
         direction = Vec3::refract(&unit_direction, &rec.normal, refraction_ratio)
       }
 
-      *scattered = Ray::new(rec.p.clone(), direction);
-      *attenuation = Color::new(1, 1, 1);
-      
-      return true;
+      Some ((Color::new(1, 1, 1), Ray::new(rec.p, direction)))
+
   }
 }

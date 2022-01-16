@@ -8,7 +8,7 @@ use crate::utility::*;
 pub mod color;
 pub mod ray;
 
-#[derive(Debug, PartialEq, PartialOrd, Clone)]
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 pub struct Vec3(f64, f64, f64);
 
 impl Vec3 {
