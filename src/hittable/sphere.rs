@@ -1,5 +1,4 @@
-use crate::{hittable::{Hittable, HitRecord, self}, Point3, Vec3, material::Material};
-use std::rc::Rc;
+use crate::{hittable::{Hittable, HitRecord}, Point3, Vec3, material::Material};
 
 pub struct Sphere<M : Material> {
     center: Point3,

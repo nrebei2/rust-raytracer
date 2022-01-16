@@ -10,10 +10,6 @@ impl Ray {
         Self { origin, direction }
     }
 
-    pub fn create() -> Self {
-        Self { origin: Point3::create(), direction: Vec3::create() }
-    }
-
     pub fn origin(&self) -> &Point3 {
         &self.origin
     }

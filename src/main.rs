@@ -9,7 +9,6 @@ extern crate impl_ops;
 
 use camera::Camera;
 use hittable::{HitRecord, Hittable, sphere::Sphere, hittable_list::HittableList};
-use std::{rc::Rc, io::Write};
 use std::time::Instant;
 use vec3::{Color, Point3, Vec3, color, ray::*};
 use utility::*;
@@ -127,7 +126,6 @@ fn main() {
     // Parallel
     let image = (0..IMAGE_HEIGHT).into_par_iter().rev().flat_map(|y| {
         (0..IMAGE_WIDTH).flat_map(|x| {
-
             let pixel_color = (0..SAMPLES_PER_PIXEL).map(|_|{
                 let u = (x as f64 + random_float()) as f64
                     / (IMAGE_WIDTH - 1) as f64;
@@ -136,7 +134,6 @@ fn main() {
                 let r = cam.get_ray(u, v);
                 ray_color(r, &world, MAX_DEPTH)
             }).fold(Color::new(0, 0, 0), |acc, x| acc + x);
-
             color::get_color(pixel_color, SAMPLES_PER_PIXEL)
         }).collect::<Vec<u8>>()
     }).collect::<Vec<u8>>();

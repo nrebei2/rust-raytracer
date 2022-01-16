@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::hittable::{self, HitRecord, Hittable};
 
 type Object = Box<dyn hittable::Hittable>;
@@ -33,7 +31,6 @@ impl Hittable for HittableList {
         t_min: f64,
         t_max: f64
     ) -> Option<HitRecord> {
-        let mut hit_anything = false;
         let mut closest_so_far = t_max;
 
         let mut rec: Option<HitRecord>  = None;

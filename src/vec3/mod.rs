@@ -1,6 +1,6 @@
 use std::{
   fmt::Display,
-  ops::{Index, IndexMut}, iter::Sum,
+  ops::{Index, IndexMut}
 };
 
 use crate::utility::*;

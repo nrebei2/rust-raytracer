@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use super::{Point3, Ray, Vec3, material::*};
 
 pub mod sphere;
